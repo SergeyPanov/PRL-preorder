@@ -29,13 +29,9 @@ vector<Me> constructEdges(string tree){
         char left_son;
         char right_son;
 
-        if (2*(i+1) > tree.size()){
-            left_son = tree[i];
-            right_son = tree[i];
-        } else{
-            left_son = tree[2*i];
-            right_son = tree[2*i + 1];
-        }
+
+        left_son = tree[2*i];
+        right_son = tree[2*i + 1];
 
         Me forward_left_edge;
         forward_left_edge.my_id = procid;
