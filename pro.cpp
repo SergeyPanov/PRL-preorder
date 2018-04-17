@@ -64,11 +64,6 @@ vector<Edge> constructEdges(string tree){
 
     for (int i = 1; i <= tree.size(); ++i) {
 
-        vector< pair< Edge, Edge > > list_for_parent;
-        vector< pair< Edge, Edge > > list_for_left;
-        vector< pair< Edge, Edge > > list_for_right;
-
-
         char parent_node = tree[i];
 
         char left_son;
@@ -93,17 +88,6 @@ vector<Edge> constructEdges(string tree){
 
         ++procid;
 
-        if (forward_left_edge.from_node != 0 && forward_left_edge.to_node != 0 &&
-                back_left_edge.from_node != 0 && back_left_edge.to_node != 0){
-
-            pair< Edge, Edge > left_pair = make_pair(forward_left_edge, back_left_edge);
-            list_for_parent.push_back(left_pair);
-
-            // Insert pair for the left son
-            pair< Edge, Edge > left_sons_pair = make_pair(back_left_edge, forward_left_edge);
-            list_for_left.push_back(left_sons_pair);
-
-        }
 
 
         Edge forward_right_edge = make_edge(procid, parent_node, right_son, false);
@@ -119,47 +103,8 @@ vector<Edge> constructEdges(string tree){
             edges.push_back(back_right_edge);
 
 
-
-        if (forward_right_edge.from_node != 0 && forward_right_edge.to_node != 0 &&
-                back_right_edge.from_node != 0 && back_right_edge.to_node != 0){
-            pair< Edge, Edge > right_pair = make_pair(forward_right_edge, back_right_edge);
-            list_for_parent.push_back(right_pair);
-
-            // Insert pair for the right son
-            pair< Edge, Edge > right_sons_pair = make_pair(back_right_edge, forward_right_edge);
-            list_for_right.push_back(right_sons_pair);
-        }
-
-
-
-        map< char, vector< pair<Edge, Edge> > >::iterator it = adjacency_list.find(parent_node);
-
-        if (it != adjacency_list.end()){
-
-            for (int j = 0; j < list_for_parent.size(); ++j) {
-
-//                if (list_for_parent[j].first.from_node != 0 && list_for_parent[j].first.to_node != 0 &&
-//                        list_for_parent[j].second.from_node != 0 && list_for_parent[j].second.to_node != 0)
-                    it->second.push_back(list_for_parent[j]);
-            }
-
-        } else{
-            // Insert parent
-            if (list_for_parent.size() > 0)
-                adjacency_list.insert(pair< char, vector< pair<Edge, Edge> > >(parent_node, list_for_parent));
-
-            // Insert left son
-            if (list_for_left.size() > 0)
-                adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(left_son, list_for_left));
-
-            // Insert right son
-            if (list_for_right.size() > 0)
-                adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(right_son, list_for_right));
-        }
-
         ++procid;
     }
-//    show_map(adjacency_list);
     return edges;
 }
 
@@ -185,8 +130,26 @@ pair< Edge, Edge > find_pair(vector< Edge > edges, char from, char to){
 
 }
 
+pair< Edge, Edge > find_parent(vector< Edge > edges, char node){
+    Edge parent_forward = {-1};
+    Edge parent_back = {-1};
 
-void construct_adacency_list(vector< Edge > edges, string nodes){
+    for (int i = 0; i < edges.size(); ++i) {
+
+        if (edges[i].is_back && edges[i].from_node == node){
+            parent_back = edges[i];
+        }
+
+        if (!edges[i].is_back && edges[i].to_node == node){
+            parent_forward = edges[i];
+        }
+    }
+
+    return pair< Edge, Edge > (parent_forward, parent_back);
+};
+
+
+map< char, vector< pair< Edge, Edge > > > construct_adacency_list(vector< Edge > edges, string nodes){
 
     int n = nodes.size();
     nodes = " " + nodes;
@@ -203,30 +166,34 @@ void construct_adacency_list(vector< Edge > edges, string nodes){
         char right_son = nodes[2*i + 1];
         inned_iterator += 3;
 
+        vector< pair< Edge, Edge > > adacency;
+
 
         pair< Edge, Edge > left = find_pair(edges, node, left_son);
         pair< Edge, Edge > right = find_pair(edges, node, right_son);
+        pair< Edge, Edge > parent = find_parent(edges, node);
+
+
+        if (parent.first.my_id >= 0 && parent.second.my_id >= 0){
+            adacency.push_back(parent);
+        }
+
 
         if (left.first.my_id >= 0 && left.second.my_id >= 0 ){
-            cout << "For node: " << node << endl;
-            cout << "Left: " << endl;
-            display_edge(left);
+            adacency.push_back(left);
         }
 
         if (right.first.my_id >= 0 && right.second.my_id >= 0){
-            cout << "Right: " << endl;
-            display_edge(right);
+            adacency.push_back(right);
         }
 
-
-
-
-
-
-
-
+        adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(node, adacency));
 
     }
+
+    show_map(adjacency_list);
+
+    return adjacency_list;
 
 }
 
