@@ -8,6 +8,46 @@
 
 using namespace std;
 
+
+template<class T>
+std::vector<unsigned char> serialize_object(T object)
+{
+    T moved_object = std::move(object);
+    std::vector<unsigned char> byte_v;
+    auto *data_ptr = reinterpret_cast<unsigned char *>(&moved_object);
+    for (std::size_t i = 0; i < sizeof(T); ++i) {
+        byte_v.push_back(data_ptr[i]);
+    }
+    return byte_v;
+}
+
+template<class T>
+T deserialize_to_object(std::vector<unsigned char>& byte_v)
+{
+    return *reinterpret_cast<T*>(byte_v.data());
+}
+
+template<class T>
+std::vector<unsigned char> serialize_pair(std::pair<T, T> p)
+{
+    std::vector<unsigned char> serialized_pair;
+    std::vector<unsigned char> first_serialized = serialize_object(p.first);
+    std::vector<unsigned char> second_serialized = serialize_object(p.second);
+    serialized_pair.insert(serialized_pair.end(), first_serialized.begin(), first_serialized.end());
+    serialized_pair.insert(serialized_pair.end(), second_serialized.begin(), second_serialized.end());
+    return serialized_pair;
+}
+
+template<class T>
+std::pair<T, T> deserialize_to_pair_of(std::vector<unsigned char> &byte_v)
+{
+    std::vector<unsigned char> first_serialized(byte_v.begin(), byte_v.begin() + byte_v.size()/2);
+    std::vector<unsigned char> second_serialized(byte_v.begin() + byte_v.size()/2, byte_v.end());
+    return std::pair<T, T>(deserialize_to_object<T>(first_serialized), deserialize_to_object<T>(second_serialized));
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 typedef struct Edge {
     int my_id;
     char from_node;
@@ -393,8 +433,18 @@ int main(int argc, char** argv) {
         for (int j = 0; j < numprocs; ++j) {
             MPI_Send(&tour_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);  // Send size of tour
 
+
             for (int i = 0; i < tour.size(); ++i) {
-                MPI_Send(&tour[i], sizeof(pair<Edge, Edge>), MPI_UNSIGNED, j, TAG, MPI_COMM_WORLD);  // Send tour
+
+                vector<unsigned char > vec = serialize_pair(tour[i]);
+
+                int local_size = static_cast<int>(vec.size());
+
+                MPI_Send(&local_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);
+
+                MPI_Send(vec.data(), static_cast<int>(vec.size()), MPI_UNSIGNED_CHAR, j, TAG, MPI_COMM_WORLD);  // Send tour
+
+//                MPI_Send(&tour[i], sizeof(pair<Edge, Edge>), MPI_UNSIGNED, j, TAG, MPI_COMM_WORLD);  // Send tour
             }
         }
 
@@ -412,13 +462,26 @@ int main(int argc, char** argv) {
     // Receive etour
     MPI_Recv(&tour_size, 1, MPI_INT, 0, TAG ,MPI_COMM_WORLD, &stat);
     pair< Edge, Edge > pr;
+    int loc_size;
     for (int k = 0; k < tour_size; ++k) {
-        MPI_Recv(&pr, sizeof(pair<Edge, Edge>), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
-        my_tour.push_back(pr);
+
+        MPI_Recv(&loc_size, 1, MPI_INT, 0, TAG, MPI_COMM_WORLD, &stat);
+
+        cout << "loc-size " << loc_size << endl;
+
+        vector<unsigned char > vec;
+        vec.resize(sizeof(pair< Edge, Edge >));
+
+        MPI_Recv(vec.data(), vec.size(), MPI_UNSIGNED_CHAR, 0, TAG ,MPI_COMM_WORLD, &stat);
+
+        pair< Edge, Edge > pr = deserialize_to_pair_of< Edge >(vec);
+
+        display_edge(pr);
+//        my_tour.push_back(pr);
     }
 
     /////////////////////////////////////////////////////
-    int edge_index = 0;
+/*    int edge_index = 0;
     vector< pair< Edge, int > > positiones_edges;
 
     Edge next_edge;
@@ -451,7 +514,7 @@ int main(int argc, char** argv) {
 
     for (int l = 0; l < positiones_edges.size(); ++l) {
         cout << "Edge: " << positiones_edges[l].first.my_id << " on position: " << positiones_edges[l].second << endl;
-    }
+    }*/
     /////////////////////////////////////////////////////
 
 
