@@ -360,10 +360,6 @@ vector< pair< Edge, int > > calculate_positions(vector< pair< Edge, Edge > > eto
         }
     }
 
-//    for (int k = 0; k < positiones_edges.size(); ++k) {
-//        cout << "Edge: " << positiones_edges[k].first.my_id << " on position: " << positiones_edges[k].second << endl;
-//    }
-
     return positiones_edges;
 
 }
@@ -377,13 +373,12 @@ int main(int argc, char** argv) {
     MPI_Request  request;
     MPI_Status stat;
 
-    int memory_size;
     int tour_size;
-
 
     Edge myedge;
 
     vector< pair< Edge, Edge > > my_tour;
+    vector< pair< Edge, int > > my_positioned;
 
 
 
@@ -404,7 +399,7 @@ int main(int argc, char** argv) {
         vector<Edge> edges = constructEdges(input);
         map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
         vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
-//        calculate_positions(tour, input[0]);
+//        vector< pair< Edge, int > > positioned = calculate_positions(tour, input[0]);
 
 
 
@@ -413,19 +408,19 @@ int main(int argc, char** argv) {
             MPI_Send(&edges[i], sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD);
         }
 
+        // Broadcast root node
+        for (int k = 0; k < numprocs; ++k) {
+            MPI_Send(&input[0], sizeof(char), MPI_CHAR, k, TAG, MPI_COMM_WORLD);
+        }
+
         // Broadcast etour
         tour_size = static_cast<int>(tour.size());
-        memory_size = sizeof(pair< Edge, Edge >) * tour_size;
-
-        display_etour(tour);
-        cout << "-----" << endl;
-
         for (int j = 0; j < numprocs; ++j) {
             MPI_Send(&tour_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);  // Send size of tour
 
-            MPI_Send(&memory_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);  // Used memory
-
-            MPI_Send(tour.data(), memory_size, MPI_UNSIGNED, j, TAG, MPI_COMM_WORLD);  // Send tour
+            for (int i = 0; i < tour.size(); ++i) {
+                MPI_Send(&tour[i], sizeof(pair<Edge, Edge>), MPI_UNSIGNED, j, TAG, MPI_COMM_WORLD);  // Send tour
+            }
         }
 
     }
@@ -434,29 +429,28 @@ int main(int argc, char** argv) {
     // Receive information about myself
     MPI_Recv(&myedge, sizeof(Edge), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
 
-    cout << "I'm: " << myid << " my edge is: "<< endl;
-    cout << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
+    // Receive root node
+    char root;
+    MPI_Recv(&root, sizeof(char), MPI_CHAR, 0, TAG ,MPI_COMM_WORLD, &stat);
+    cout << "I'm: " << myid << " received root: " << root << endl;
 
+//    cout << "I'm: " << myid << " my edge is: "<< endl;
+//    cout << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
+//
 
-
+    // Receive etour
     MPI_Recv(&tour_size, 1, MPI_INT, 0, TAG ,MPI_COMM_WORLD, &stat);
-    cout << "I'm: " << myid << " the size of tour is: "<< endl;
-    cout << tour_size << endl;
-
-
-
-
-    MPI_Recv(&memory_size, 1, MPI_INT, 0, TAG ,MPI_COMM_WORLD, &stat);
-    cout << "I'm: " << myid << " memory used: "<< endl;
-    cout << memory_size << endl;
-
-    my_tour.resize(memory_size);
-
-
-
-    MPI_Recv(my_tour.data(), memory_size, MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
-    cout << "I'm: " << myid << " i received tour: " << my_tour.size() << endl;
+    pair< Edge, Edge > pr;
+    for (int k = 0; k < tour_size; ++k) {
+        MPI_Recv(&pr, sizeof(pair<Edge, Edge>), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
+        my_tour.push_back(pr);
+    }
+//    cout << "I'm: " << myid << endl;
     display_etour(my_tour);
+
+
+    // Calculate positions
+    my_positioned = calculate_positions(my_tour, root);
 
 
 
