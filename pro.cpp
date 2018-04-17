@@ -93,12 +93,17 @@ vector<Edge> constructEdges(string tree){
 
         ++procid;
 
-        pair< Edge, Edge > left_pair = make_pair(forward_left_edge, back_left_edge);
-        list_for_parent.push_back(left_pair);
+        if (forward_left_edge.from_node != 0 && forward_left_edge.to_node != 0 &&
+                back_left_edge.from_node != 0 && back_left_edge.to_node != 0){
 
-        // Insert pair for the left son
-        pair< Edge, Edge > left_sons_pair = make_pair(back_left_edge, forward_left_edge);
-        list_for_left.push_back(left_sons_pair);
+            pair< Edge, Edge > left_pair = make_pair(forward_left_edge, back_left_edge);
+            list_for_parent.push_back(left_pair);
+
+            // Insert pair for the left son
+            pair< Edge, Edge > left_sons_pair = make_pair(back_left_edge, forward_left_edge);
+            list_for_left.push_back(left_sons_pair);
+
+        }
 
 
         Edge forward_right_edge = make_edge(procid, parent_node, right_son, false);
@@ -115,12 +120,16 @@ vector<Edge> constructEdges(string tree){
             edges.push_back(back_right_edge);
 
 
-        pair< Edge, Edge > right_pair = make_pair(forward_right_edge, back_right_edge);
-        list_for_parent.push_back(right_pair);
 
-        // Insert pair for the right son
-        pair< Edge, Edge > right_sons_pair = make_pair(back_right_edge, forward_right_edge);
-        list_for_right.push_back(right_sons_pair);
+        if (forward_right_edge.from_node != 0 && forward_right_edge.to_node != 0 &&
+                back_right_edge.from_node != 0 && back_right_edge.to_node != 0){
+            pair< Edge, Edge > right_pair = make_pair(forward_right_edge, back_right_edge);
+            list_for_parent.push_back(right_pair);
+
+            // Insert pair for the right son
+            pair< Edge, Edge > right_sons_pair = make_pair(back_right_edge, forward_right_edge);
+            list_for_right.push_back(right_sons_pair);
+        }
 
 
 
@@ -130,21 +139,23 @@ vector<Edge> constructEdges(string tree){
 
             for (int j = 0; j < list_for_parent.size(); ++j) {
 
-                if (list_for_parent[j].first.from_node != 0 && list_for_parent[j].first.to_node != 0)
+                if (list_for_parent[j].first.from_node != 0 && list_for_parent[j].first.to_node != 0 &&
+                        list_for_parent[j].second.from_node != 0 && list_for_parent[j].second.to_node != 0)
                     it->second.push_back(list_for_parent[j]);
             }
 
-
         } else{
             // Insert parent
-            adjacency_list.insert(pair< char, vector< pair<Edge, Edge> > >(parent_node, list_for_parent));
+            if (list_for_parent.size() > 0)
+                adjacency_list.insert(pair< char, vector< pair<Edge, Edge> > >(parent_node, list_for_parent));
 
             // Insert left son
-            adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(left_son, list_for_left));
+            if (list_for_left.size() > 0)
+                adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(left_son, list_for_left));
 
             // Insert right son
-            adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(right_son, list_for_right));
-
+            if (list_for_right.size() > 0)
+                adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(right_son, list_for_right));
         }
 
         ++procid;
@@ -177,7 +188,8 @@ int main(int argc, char** argv) {
 
 
         vector<Edge> edges = constructEdges(input);
-
+//        cout << "------------" << endl;
+//
 //        for (int i = 0; i < edges.size(); ++i) {
 //            cout << "id: " << edges[i].my_id << endl;
 //            cout << "from: " << (char) edges[i].from_node << endl;
