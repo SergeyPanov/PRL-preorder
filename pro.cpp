@@ -467,8 +467,6 @@ int main(int argc, char** argv) {
 
         MPI_Recv(&loc_size, 1, MPI_INT, 0, TAG, MPI_COMM_WORLD, &stat);
 
-        cout << "loc-size " << loc_size << endl;
-
         vector<unsigned char > vec;
         vec.resize(sizeof(pair< Edge, Edge >));
 
@@ -476,12 +474,11 @@ int main(int argc, char** argv) {
 
         pair< Edge, Edge > pr = deserialize_to_pair_of< Edge >(vec);
 
-        display_edge(pr);
-//        my_tour.push_back(pr);
+        my_tour.push_back(pr);
     }
 
     /////////////////////////////////////////////////////
-/*    int edge_index = 0;
+    int edge_index = 0;
     vector< pair< Edge, int > > positiones_edges;
 
     Edge next_edge;
@@ -514,7 +511,7 @@ int main(int argc, char** argv) {
 
     for (int l = 0; l < positiones_edges.size(); ++l) {
         cout << "Edge: " << positiones_edges[l].first.my_id << " on position: " << positiones_edges[l].second << endl;
-    }*/
+    }
     /////////////////////////////////////////////////////
 
 
