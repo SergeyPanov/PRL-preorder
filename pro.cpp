@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 
+#define TAG 0
+
 using namespace std;
 
 typedef struct Edge {
@@ -13,12 +15,16 @@ typedef struct Edge {
     bool is_back;
 } Edge;
 
+void display_one_direction(Edge e){
+    cout << e.my_id << " " << e.from_node << " " << e.to_node << " " << e.is_back << endl;
+}
+
 void display_edge(pair< Edge, Edge > p){
     cout << "first: "<< endl;
-    cout << p.first.my_id << " " << p.first.from_node << " " << p.first.to_node << " " << p.first.is_back << endl;
+    display_one_direction(p.first);
 
     cout << "second: "<< endl;
-    cout << p.second.my_id << " " << p.second.from_node << " " << p.second.to_node << " " << p.second.is_back << endl;
+    display_one_direction(p.second);
 }
 
 Edge make_edge(int id, char from_node, char to_node, bool is_back){
@@ -36,7 +42,7 @@ pair< Edge, Edge > make_pair(Edge from, Edge to){
     pr.first = from;
     pr.second = to;
     return pr;
-};
+}
 
 void show_map(map< char, vector< pair< Edge, Edge > > > adjacencies){
 
@@ -102,7 +108,6 @@ vector<Edge> constructEdges(string tree){
         if (2*nodes-2 > edges.size())
             edges.push_back(back_right_edge);
 
-
         ++procid;
     }
     return edges;
@@ -145,13 +150,13 @@ pair< Edge, Edge > find_parent(vector< Edge > edges, char node){
         }
     }
 
-    return pair< Edge, Edge > (parent_forward, parent_back);
-};
+    return pair< Edge, Edge > (parent_back, parent_forward);
+}
 
 
-map< char, vector< pair< Edge, Edge > > > construct_adacency_list(vector< Edge > edges, string nodes){
+map< char, vector< pair< Edge, Edge > > > construct_adacency_list(const vector< Edge > &edges, string nodes){
 
-    int n = nodes.size();
+    int n = static_cast<int>(nodes.size());
     nodes = " " + nodes;
 
 
@@ -188,12 +193,104 @@ map< char, vector< pair< Edge, Edge > > > construct_adacency_list(vector< Edge >
         }
 
         adjacency_list.insert(pair< char, vector< pair< Edge, Edge > > >(node, adacency));
+    }
+
+    return adjacency_list;
+
+}
+
+void display_vector(vector< pair< Edge, Edge > > vec){
+    for (int i = 0; i < vec.size(); ++i) {
+
+        cout << "[\nFrom edge: ";
+        display_one_direction(vec[i].first);
+        cout << "To edge: ";
+        display_one_direction(vec[i].second);
+        cout << "]" << endl;
+
+    }
+}
+
+Edge next(Edge e, map< char, vector< pair< Edge, Edge > > > adjacency_list){
+
+    Edge next_e = {-1};
+
+    for (auto &it : adjacency_list) {
+//        cout << it.first <<  endl;
+
+        int j = 0;
+
+        cout << "Node: " << it.first << endl;
+//        display_vector(it.second);
+//        cout << "Size of vector is: " << it.second.size() << endl;
+
+        for (int i = 0; i < it.second.size(); ++i) {
+//            cout << it.second[i].first.from_node;
+
+            if (e.my_id == it.second[i].first.my_id &&
+                    e.from_node == it.second[i].first.from_node){
+                cout << "Edge: " << e.my_id << " is from node " << it.first << endl;
+
+
+                if (i + 1 >= it.second.size()){
+                    cout << "No next for " << e.my_id << endl;
+                }else{
+                    cout << "Next for: " << e.my_id << " is " << it.second[i+1].first.my_id << endl;
+                }
+            }else{
+                cout << "----" << endl;
+            }
+
+        }
+        cout << "" << endl;
 
     }
 
-    show_map(adjacency_list);
+    return next_e;
 
-    return adjacency_list;
+}
+
+
+Edge get_reversed(Edge e, vector< Edge > edges){
+
+    Edge reverse = {-1};
+
+    for (int i = 0; i < edges.size(); ++i) {
+        if ( edges[i].is_back == !e.is_back
+                && edges[i].from_node == e.to_node
+             && edges[i].to_node == e.from_node){
+            reverse = edges[i];
+        }
+    }
+
+    return reverse;
+
+}
+
+
+void construct_etour(map< char, vector< pair< Edge, Edge > > > adj_list, vector< Edge > edges, string nodes) {
+
+    nodes = " " + nodes;
+    show_map(adj_list);
+
+    map< Edge, Edge > etour;
+    for (int i = 0; i < edges.size(); ++i) {
+
+        Edge rev = get_reversed(edges[i], edges);
+
+
+        cout << "For edge: " << edges[i].my_id << " reversed is " << rev.my_id << endl;
+
+        next(rev, adj_list);
+
+
+//        cout << "For edge: " << endl;
+//        display_one_direction(edges[i]);
+//
+//        cout << "Reverse is: " << endl;
+//        display_one_direction(rev);
+
+    }
 
 }
 
@@ -203,6 +300,11 @@ int main(int argc, char** argv) {
     int numprocs;
     int myid;
 
+    MPI_Request  request;
+    MPI_Status stat;
+
+
+    Edge myedge;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -219,7 +321,17 @@ int main(int argc, char** argv) {
 
 
         vector<Edge> edges = constructEdges(input);
-        construct_adacency_list(edges, input);
+        map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
+//        show_map(list);
+        construct_etour(list, edges, input);
+
+//        show_map(list);
+
+
+//        for (int i = 0; i < numprocs; ++i) {
+//            MPI_Send(&edges[i], sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD);
+//        }
+
 //        cout << "------------" << endl;
 
 //        for (int i = 0; i < edges.size(); ++i) {
@@ -231,6 +343,11 @@ int main(int argc, char** argv) {
 //        }
     }
 
+
+//    MPI_Recv(&myedge, sizeof(Edge), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
+//
+//    cout << "I'm: " << myid << " my edge is: "<< endl;
+//    cout << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
 
     MPI_Finalize();
     return 0;
