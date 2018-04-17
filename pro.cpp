@@ -227,29 +227,19 @@ Edge next(Edge e, map< char, vector< pair< Edge, Edge > > > adjacency_list){
     Edge next_e = {-1};
 
     for (auto &it : adjacency_list) {
-//        cout << it.first <<  endl;
         int j = 0;
-//        cout << "Node: " << it.first << endl;
-//        display_vector(it.second);
-//        cout << "Size of vector is: " << it.second.size() << endl;
 
         for (int i = 0; i < it.second.size(); ++i) {
-//            cout << it.second[i].first.from_node;
 
             if (e.my_id == it.second[i].first.my_id &&
                     e.from_node == it.second[i].first.from_node){
-
-//                cout << "Edge: " << e.my_id << " is from node " << it.first << endl;
                 if (i + 1 >= it.second.size()){
-//                    cout << "No next for " << e.my_id << endl;
 
                 }else{
-//                    cout << "Next for: " << e.my_id << " is " << it.second[i+1].first.my_id << endl;
                     next_e = it.second[i+1].first;
                 }
             }
         }
-//        cout << "" << endl;
     }
     return next_e;
 
@@ -275,14 +265,9 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
     Edge edge = {-1};
 
     for (auto &it : adj_list) {
-//        cout << it.first <<  endl;
         int j = 0;
-//        cout << "Node: " << it.first << endl;
-//        display_vector(it.second);
-//        cout << "Size of vector is: " << it.second.size() << endl;
 
         for (int i = 0; i < it.second.size(); ++i) {
-//            cout << it.second[i].first.from_node;
 
             if (e.my_id == it.second[i].first.my_id &&
                 e.from_node == it.second[i].first.from_node){
@@ -291,7 +276,6 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
 
             }
         }
-//        cout << "" << endl;
     }
 
     return e;
@@ -301,15 +285,11 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
 vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge, Edge > > > &adj_list, vector< Edge > edges, string nodes) {
 
     nodes = " " + nodes;
-//    show_map(adj_list);
 
     vector< pair<Edge, Edge> > etour;
     for (int i = 0; i < edges.size(); ++i) {
 
         Edge rev = get_reversed(edges[i], edges);
-
-
-//        cout << "For edge: " << edges[i].my_id << " reversed is " << rev.my_id << endl;
 
         Edge next_edge = next(rev, adj_list);
 
@@ -321,7 +301,6 @@ vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge
 
     }
 
-//    display_etour(etour);
 
     return etour;
 }
@@ -340,7 +319,6 @@ vector< pair< Edge, int > > calculate_positions(vector< pair< Edge, Edge > > eto
             next_edge = etour[j].first;
         }
     }
-//    display_one_direction(next_edge);
 
     positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
 
@@ -399,9 +377,6 @@ int main(int argc, char** argv) {
         vector<Edge> edges = constructEdges(input);
         map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
         vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
-//        vector< pair< Edge, int > > positioned = calculate_positions(tour, input[0]);
-
-
 
         // Broadcast profiles to all processes
         for (int i = 0; i < numprocs; ++i) {
@@ -434,10 +409,6 @@ int main(int argc, char** argv) {
     MPI_Recv(&root, sizeof(char), MPI_CHAR, 0, TAG ,MPI_COMM_WORLD, &stat);
     cout << "I'm: " << myid << " received root: " << root << endl;
 
-//    cout << "I'm: " << myid << " my edge is: "<< endl;
-//    cout << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
-//
-
     // Receive etour
     MPI_Recv(&tour_size, 1, MPI_INT, 0, TAG ,MPI_COMM_WORLD, &stat);
     pair< Edge, Edge > pr;
@@ -445,9 +416,6 @@ int main(int argc, char** argv) {
         MPI_Recv(&pr, sizeof(pair<Edge, Edge>), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
         my_tour.push_back(pr);
     }
-//    cout << "I'm: " << myid << endl;
-//    display_etour(my_tour);
-
 
     /////////////////////////////////////////////////////
     int edge_index = 0;
