@@ -446,12 +446,45 @@ int main(int argc, char** argv) {
         my_tour.push_back(pr);
     }
 //    cout << "I'm: " << myid << endl;
-    display_etour(my_tour);
+//    display_etour(my_tour);
 
 
-    // Calculate positions
-    my_positioned = calculate_positions(my_tour, root);
+    /////////////////////////////////////////////////////
+    int edge_index = 0;
+    vector< pair< Edge, int > > positiones_edges;
 
+    Edge next_edge;
+
+    // Find first edge
+    for (int j = 0; j < my_tour.size(); ++j) {
+        if (my_tour[j].first.my_id == 0 && my_tour[j].first.from_node == root){
+            next_edge = my_tour[j].first;
+        }
+    }
+//    display_one_direction(next_edge);
+
+    positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
+
+    ++edge_index;
+
+    while (edge_index < my_tour.size()){
+
+        for (int i = 0; i < my_tour.size(); ++i) {
+
+            if (next_edge.my_id == my_tour[i].first.my_id){
+                next_edge = my_tour[i].second;
+                positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
+                ++edge_index;
+                break;
+            }
+
+        }
+    }
+
+    for (int l = 0; l < positiones_edges.size(); ++l) {
+        cout << "Edge: " << positiones_edges[l].first.my_id << " on position: " << positiones_edges[l].second << endl;
+    }
+    /////////////////////////////////////////////////////
 
 
     MPI_Finalize();
