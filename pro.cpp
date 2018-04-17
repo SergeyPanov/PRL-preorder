@@ -292,17 +292,9 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
 
                 return it.second[0].first;
 
-//                cout << "Edge: " << e.my_id << " is from node " << it.first << endl;
-//                if (i + 1 >= it.second.size()){
-//                    cout << "No next for " << e.my_id << endl;
-//
-//                }else{
-//                    cout << "Next for: " << e.my_id << " is " << it.second[i+1].first.my_id << endl;
-//                    next_e = it.second[i+1].first.my_id;
-//                }
             }
         }
-        cout << "" << endl;
+//        cout << "" << endl;
     }
 
     return e;
@@ -330,12 +322,6 @@ void construct_etour(map< char, vector< pair< Edge, Edge > > > adj_list, vector<
 
         etour.push_back(pair< Edge, Edge >(edges[i], next_edge));
 
-
-//        cout << "For edge: " << endl;
-//        display_one_direction(edges[i]);
-//
-//        cout << "Reverse is: " << endl;
-//        display_one_direction(rev);
 
     }
 
