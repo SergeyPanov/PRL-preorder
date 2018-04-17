@@ -377,8 +377,13 @@ int main(int argc, char** argv) {
     MPI_Request  request;
     MPI_Status stat;
 
+    int memory_size;
+    int tour_size;
+
 
     Edge myedge;
+
+    vector< pair< Edge, Edge > > my_tour;
 
 
 
@@ -399,7 +404,7 @@ int main(int argc, char** argv) {
         vector<Edge> edges = constructEdges(input);
         map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
         vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
-        calculate_positions(tour, input[0]);
+//        calculate_positions(tour, input[0]);
 
 
 
@@ -408,15 +413,21 @@ int main(int argc, char** argv) {
             MPI_Send(&edges[i], sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD);
         }
 
-//        cout << "------------" << endl;
+        // Broadcast etour
+        tour_size = static_cast<int>(tour.size());
+        memory_size = sizeof(pair< Edge, Edge >) * tour_size;
 
-//        for (int i = 0; i < edges.size(); ++i) {
-//            cout << "id: " << edges[i].my_id << endl;
-//            cout << "from: " << (char) edges[i].from_node << endl;
-//            cout << "to: " << (char) edges[i].to_node << endl;
-//            cout << "is_back: " << edges[i].is_back << endl;
-//            cout << "------------" << endl;
-//        }
+        display_etour(tour);
+        cout << "-----" << endl;
+
+        for (int j = 0; j < numprocs; ++j) {
+            MPI_Send(&tour_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);  // Send size of tour
+
+            MPI_Send(&memory_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);  // Used memory
+
+            MPI_Send(tour.data(), memory_size, MPI_UNSIGNED, j, TAG, MPI_COMM_WORLD);  // Send tour
+        }
+
     }
 
 
@@ -425,6 +436,29 @@ int main(int argc, char** argv) {
 
     cout << "I'm: " << myid << " my edge is: "<< endl;
     cout << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
+
+
+
+    MPI_Recv(&tour_size, 1, MPI_INT, 0, TAG ,MPI_COMM_WORLD, &stat);
+    cout << "I'm: " << myid << " the size of tour is: "<< endl;
+    cout << tour_size << endl;
+
+
+
+
+    MPI_Recv(&memory_size, 1, MPI_INT, 0, TAG ,MPI_COMM_WORLD, &stat);
+    cout << "I'm: " << myid << " memory used: "<< endl;
+    cout << memory_size << endl;
+
+    my_tour.resize(memory_size);
+
+
+
+    MPI_Recv(my_tour.data(), memory_size, MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
+    cout << "I'm: " << myid << " i received tour: " << my_tour.size() << endl;
+    display_etour(my_tour);
+
+
 
     MPI_Finalize();
     return 0;
