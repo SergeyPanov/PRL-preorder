@@ -95,7 +95,6 @@ vector<Edge> constructEdges(string tree){
         ++procid;
 
 
-
         Edge forward_right_edge = make_edge(procid, parent_node, right_son, false);
 
         if (2*nodes-2 > edges.size())
@@ -301,7 +300,7 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
 }
 
 
-void construct_etour(map< char, vector< pair< Edge, Edge > > > adj_list, vector< Edge > edges, string nodes) {
+vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge, Edge > > > &adj_list, vector< Edge > edges, string nodes) {
 
     nodes = " " + nodes;
     show_map(adj_list);
@@ -322,10 +321,51 @@ void construct_etour(map< char, vector< pair< Edge, Edge > > > adj_list, vector<
 
         etour.push_back(pair< Edge, Edge >(edges[i], next_edge));
 
-
     }
 
     display_etour(etour);
+
+    return etour;
+}
+
+void calculate_positions(vector< pair< Edge, Edge > > etour, char root){
+
+
+    int edge_index = 0;
+    vector< pair< Edge, int > > positiones_edges;
+
+    Edge next_edge;
+
+    // Find first edge
+    for (int j = 0; j < etour.size(); ++j) {
+        if (etour[j].first.my_id == 0 && etour[j].first.from_node == root){
+            next_edge = etour[j].first;
+        }
+    }
+    display_one_direction(next_edge);
+
+    positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
+
+    ++edge_index;
+
+    while (edge_index < etour.size()){
+
+        for (int i = 0; i < etour.size(); ++i) {
+
+            if (next_edge.my_id == etour[i].first.my_id){
+                next_edge = etour[i].second;
+                positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
+                ++edge_index;
+                break;
+            }
+
+        }
+    }
+
+    for (int k = 0; k < positiones_edges.size(); ++k) {
+        cout << "Edge: " << positiones_edges[k].first.my_id << " on position: " << positiones_edges[k].second << endl;
+    }
+
 
 }
 
@@ -358,7 +398,8 @@ int main(int argc, char** argv) {
         vector<Edge> edges = constructEdges(input);
         map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
 //        show_map(list);
-        construct_etour(list, edges, input);
+        vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
+        calculate_positions(tour, input[0]);
 
 //        show_map(list);
 
