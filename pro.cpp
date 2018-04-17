@@ -229,7 +229,7 @@ Edge next(Edge e, map< char, vector< pair< Edge, Edge > > > adjacency_list){
     for (auto &it : adjacency_list) {
 //        cout << it.first <<  endl;
         int j = 0;
-        cout << "Node: " << it.first << endl;
+//        cout << "Node: " << it.first << endl;
 //        display_vector(it.second);
 //        cout << "Size of vector is: " << it.second.size() << endl;
 
@@ -239,19 +239,17 @@ Edge next(Edge e, map< char, vector< pair< Edge, Edge > > > adjacency_list){
             if (e.my_id == it.second[i].first.my_id &&
                     e.from_node == it.second[i].first.from_node){
 
-                cout << "Edge: " << e.my_id << " is from node " << it.first << endl;
+//                cout << "Edge: " << e.my_id << " is from node " << it.first << endl;
                 if (i + 1 >= it.second.size()){
-                    cout << "No next for " << e.my_id << endl;
+//                    cout << "No next for " << e.my_id << endl;
 
                 }else{
-                    cout << "Next for: " << e.my_id << " is " << it.second[i+1].first.my_id << endl;
+//                    cout << "Next for: " << e.my_id << " is " << it.second[i+1].first.my_id << endl;
                     next_e = it.second[i+1].first;
                 }
-            }else{
-                cout << "----" << endl;
             }
         }
-        cout << "" << endl;
+//        cout << "" << endl;
     }
     return next_e;
 
@@ -279,7 +277,7 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
     for (auto &it : adj_list) {
 //        cout << it.first <<  endl;
         int j = 0;
-        cout << "Node: " << it.first << endl;
+//        cout << "Node: " << it.first << endl;
 //        display_vector(it.second);
 //        cout << "Size of vector is: " << it.second.size() << endl;
 
@@ -303,7 +301,7 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
 vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge, Edge > > > &adj_list, vector< Edge > edges, string nodes) {
 
     nodes = " " + nodes;
-    show_map(adj_list);
+//    show_map(adj_list);
 
     vector< pair<Edge, Edge> > etour;
     for (int i = 0; i < edges.size(); ++i) {
@@ -311,7 +309,7 @@ vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge
         Edge rev = get_reversed(edges[i], edges);
 
 
-        cout << "For edge: " << edges[i].my_id << " reversed is " << rev.my_id << endl;
+//        cout << "For edge: " << edges[i].my_id << " reversed is " << rev.my_id << endl;
 
         Edge next_edge = next(rev, adj_list);
 
@@ -323,12 +321,12 @@ vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge
 
     }
 
-    display_etour(etour);
+//    display_etour(etour);
 
     return etour;
 }
 
-void calculate_positions(vector< pair< Edge, Edge > > etour, char root){
+vector< pair< Edge, int > > calculate_positions(vector< pair< Edge, Edge > > etour, char root){
 
 
     int edge_index = 0;
@@ -342,7 +340,7 @@ void calculate_positions(vector< pair< Edge, Edge > > etour, char root){
             next_edge = etour[j].first;
         }
     }
-    display_one_direction(next_edge);
+//    display_one_direction(next_edge);
 
     positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
 
@@ -362,10 +360,11 @@ void calculate_positions(vector< pair< Edge, Edge > > etour, char root){
         }
     }
 
-    for (int k = 0; k < positiones_edges.size(); ++k) {
-        cout << "Edge: " << positiones_edges[k].first.my_id << " on position: " << positiones_edges[k].second << endl;
-    }
+//    for (int k = 0; k < positiones_edges.size(); ++k) {
+//        cout << "Edge: " << positiones_edges[k].first.my_id << " on position: " << positiones_edges[k].second << endl;
+//    }
 
+    return positiones_edges;
 
 }
 
@@ -380,6 +379,8 @@ int main(int argc, char** argv) {
 
 
     Edge myedge;
+
+
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -397,16 +398,15 @@ int main(int argc, char** argv) {
 
         vector<Edge> edges = constructEdges(input);
         map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
-//        show_map(list);
         vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
         calculate_positions(tour, input[0]);
 
-//        show_map(list);
 
 
-//        for (int i = 0; i < numprocs; ++i) {
-//            MPI_Send(&edges[i], sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD);
-//        }
+        // Broadcast profiles to all processes
+        for (int i = 0; i < numprocs; ++i) {
+            MPI_Send(&edges[i], sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD);
+        }
 
 //        cout << "------------" << endl;
 
@@ -420,10 +420,11 @@ int main(int argc, char** argv) {
     }
 
 
-//    MPI_Recv(&myedge, sizeof(Edge), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
-//
-//    cout << "I'm: " << myid << " my edge is: "<< endl;
-//    cout << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
+    // Receive information about myself
+    MPI_Recv(&myedge, sizeof(Edge), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
+
+    cout << "I'm: " << myid << " my edge is: "<< endl;
+    cout << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
 
     MPI_Finalize();
     return 0;
