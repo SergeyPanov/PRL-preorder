@@ -62,7 +62,7 @@ vector<Edge> constructEdges(string tree){
 
     tree = " " + tree;
 
-    for (int i = 1; i < tree.size(); ++i) {
+    for (int i = 1; i <= tree.size(); ++i) {
 
         vector< pair< Edge, Edge > > list_for_parent;
         vector< pair< Edge, Edge > > list_for_left;
@@ -115,7 +115,6 @@ vector<Edge> constructEdges(string tree){
 
         Edge back_right_edge = make_edge(procid, right_son, parent_node, true);
 
-
         if (2*nodes-2 > edges.size())
             edges.push_back(back_right_edge);
 
@@ -139,8 +138,8 @@ vector<Edge> constructEdges(string tree){
 
             for (int j = 0; j < list_for_parent.size(); ++j) {
 
-                if (list_for_parent[j].first.from_node != 0 && list_for_parent[j].first.to_node != 0 &&
-                        list_for_parent[j].second.from_node != 0 && list_for_parent[j].second.to_node != 0)
+//                if (list_for_parent[j].first.from_node != 0 && list_for_parent[j].first.to_node != 0 &&
+//                        list_for_parent[j].second.from_node != 0 && list_for_parent[j].second.to_node != 0)
                     it->second.push_back(list_for_parent[j]);
             }
 
@@ -160,11 +159,76 @@ vector<Edge> constructEdges(string tree){
 
         ++procid;
     }
-
-    show_map(adjacency_list);
+//    show_map(adjacency_list);
     return edges;
 }
 
+
+pair< Edge, Edge > find_pair(vector< Edge > edges, char from, char to){
+
+    Edge forward_edge = {-1};
+    Edge back_edge = {-1};
+
+    for (int i = 0; i < edges.size(); ++i) {
+
+        if (edges[i].from_node == from && edges[i].to_node == to){
+            forward_edge = edges[i];
+        }
+
+
+        if (edges[i].from_node == to && edges[i].to_node == from){
+            back_edge = edges[i];
+        }
+    }
+
+    return pair< Edge, Edge >(forward_edge, back_edge);
+
+}
+
+
+void construct_adacency_list(vector< Edge > edges, string nodes){
+
+    int n = nodes.size();
+    nodes = " " + nodes;
+
+
+    map< char, vector< pair< Edge, Edge > > > adjacency_list;
+
+    int inned_iterator = 0;
+
+    for (int i = 1; i < nodes.size(); ++i) {
+
+        char node = nodes[i];
+        char left_son = nodes[2*i];
+        char right_son = nodes[2*i + 1];
+        inned_iterator += 3;
+
+
+        pair< Edge, Edge > left = find_pair(edges, node, left_son);
+        pair< Edge, Edge > right = find_pair(edges, node, right_son);
+
+        if (left.first.my_id >= 0 && left.second.my_id >= 0 ){
+            cout << "For node: " << node << endl;
+            cout << "Left: " << endl;
+            display_edge(left);
+        }
+
+        if (right.first.my_id >= 0 && right.second.my_id >= 0){
+            cout << "Right: " << endl;
+            display_edge(right);
+        }
+
+
+
+
+
+
+
+
+
+    }
+
+}
 
 
 int main(int argc, char** argv) {
@@ -188,8 +252,9 @@ int main(int argc, char** argv) {
 
 
         vector<Edge> edges = constructEdges(input);
+        construct_adacency_list(edges, input);
 //        cout << "------------" << endl;
-//
+
 //        for (int i = 0; i < edges.size(); ++i) {
 //            cout << "id: " << edges[i].my_id << endl;
 //            cout << "from: " << (char) edges[i].from_node << endl;
