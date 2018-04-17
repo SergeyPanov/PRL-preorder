@@ -153,6 +153,18 @@ pair< Edge, Edge > find_parent(vector< Edge > edges, char node){
     return pair< Edge, Edge > (parent_back, parent_forward);
 }
 
+void display_etour(vector< pair<Edge, Edge> > tour){
+
+    for (int i = 0; i < tour.size(); ++i) {
+        cout << "After: ";
+        display_one_direction(tour[i].first);
+        cout << "Is: ";
+        display_one_direction(tour[i].second);
+    }
+
+
+}
+
 
 map< char, vector< pair< Edge, Edge > > > construct_adacency_list(const vector< Edge > &edges, string nodes){
 
@@ -217,9 +229,7 @@ Edge next(Edge e, map< char, vector< pair< Edge, Edge > > > adjacency_list){
 
     for (auto &it : adjacency_list) {
 //        cout << it.first <<  endl;
-
         int j = 0;
-
         cout << "Node: " << it.first << endl;
 //        display_vector(it.second);
 //        cout << "Size of vector is: " << it.second.size() << endl;
@@ -229,30 +239,27 @@ Edge next(Edge e, map< char, vector< pair< Edge, Edge > > > adjacency_list){
 
             if (e.my_id == it.second[i].first.my_id &&
                     e.from_node == it.second[i].first.from_node){
+
                 cout << "Edge: " << e.my_id << " is from node " << it.first << endl;
-
-
                 if (i + 1 >= it.second.size()){
                     cout << "No next for " << e.my_id << endl;
+
                 }else{
                     cout << "Next for: " << e.my_id << " is " << it.second[i+1].first.my_id << endl;
+                    next_e = it.second[i+1].first;
                 }
             }else{
                 cout << "----" << endl;
             }
-
         }
         cout << "" << endl;
-
     }
-
     return next_e;
 
 }
 
 
 Edge get_reversed(Edge e, vector< Edge > edges){
-
     Edge reverse = {-1};
 
     for (int i = 0; i < edges.size(); ++i) {
@@ -262,9 +269,43 @@ Edge get_reversed(Edge e, vector< Edge > edges){
             reverse = edges[i];
         }
     }
-
     return reverse;
 
+}
+
+Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edge e){
+
+    Edge edge = {-1};
+
+    for (auto &it : adj_list) {
+//        cout << it.first <<  endl;
+        int j = 0;
+        cout << "Node: " << it.first << endl;
+//        display_vector(it.second);
+//        cout << "Size of vector is: " << it.second.size() << endl;
+
+        for (int i = 0; i < it.second.size(); ++i) {
+//            cout << it.second[i].first.from_node;
+
+            if (e.my_id == it.second[i].first.my_id &&
+                e.from_node == it.second[i].first.from_node){
+
+                return it.second[0].first;
+
+//                cout << "Edge: " << e.my_id << " is from node " << it.first << endl;
+//                if (i + 1 >= it.second.size()){
+//                    cout << "No next for " << e.my_id << endl;
+//
+//                }else{
+//                    cout << "Next for: " << e.my_id << " is " << it.second[i+1].first.my_id << endl;
+//                    next_e = it.second[i+1].first.my_id;
+//                }
+            }
+        }
+        cout << "" << endl;
+    }
+
+    return e;
 }
 
 
@@ -273,7 +314,7 @@ void construct_etour(map< char, vector< pair< Edge, Edge > > > adj_list, vector<
     nodes = " " + nodes;
     show_map(adj_list);
 
-    map< Edge, Edge > etour;
+    vector< pair<Edge, Edge> > etour;
     for (int i = 0; i < edges.size(); ++i) {
 
         Edge rev = get_reversed(edges[i], edges);
@@ -281,7 +322,13 @@ void construct_etour(map< char, vector< pair< Edge, Edge > > > adj_list, vector<
 
         cout << "For edge: " << edges[i].my_id << " reversed is " << rev.my_id << endl;
 
-        next(rev, adj_list);
+        Edge next_edge = next(rev, adj_list);
+
+        if (next_edge.my_id == -1){
+            next_edge = get_first_from_list(adj_list, rev);
+        }
+
+        etour.push_back(pair< Edge, Edge >(edges[i], next_edge));
 
 
 //        cout << "For edge: " << endl;
@@ -291,6 +338,8 @@ void construct_etour(map< char, vector< pair< Edge, Edge > > > adj_list, vector<
 //        display_one_direction(rev);
 
     }
+
+    display_etour(etour);
 
 }
 
