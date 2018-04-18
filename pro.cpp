@@ -545,10 +545,14 @@ int main(int argc, char** argv) {
 
     int total_suffix_sum = 0;
 
-    for (; index >= 0 ; --index) {
-        total_suffix_sum += directions.at(index);
+    while (index >= 0){
 
-        suffix_sum.insert( pair<int, int>(index, total_suffix_sum));
+        int edge_id = positiones_edges.at(index);
+
+        total_suffix_sum += directions.at(edge_id);
+
+        suffix_sum.insert( pair<int, int>(edge_id, total_suffix_sum));
+        --index;
     }
 
 
