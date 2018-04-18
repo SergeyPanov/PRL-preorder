@@ -607,15 +607,6 @@ int main(int argc, char** argv) {
                   << std::endl ;
     }
 
-    if (!myedge.is_back){
-
-        if (myid == 0){
-            int my_pos = forward_edges.at(myid);
-            int next_id = get_id_for_pos(my_pos + 1, forward_edges);
-            cout << "After me: " << myid << " is " << next_id << endl;
-        }
-
-    }
 
 
 //    cout << "------------------------------------------------------" << endl;
