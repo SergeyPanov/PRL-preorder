@@ -400,6 +400,17 @@ map<int, int> calculate_positions(vector< pair< Edge, Edge > > etour, char root)
 
 }
 
+int get_id_for_pos(int pos,  map< int, int > id_pos){
+
+    for (auto const& x : id_pos) {
+        if (x.second == pos){
+            return x.first;
+        }
+    }
+    return -1;
+
+}
+
 
 int main(int argc, char** argv) {
 
@@ -541,7 +552,7 @@ int main(int argc, char** argv) {
 
     int e_id = positiones_edges.at(index);
 
-    suffix_sum.insert(pair< int, int >(e_id, 0));  // Suffix sum for last edge is 0
+    suffix_sum.insert(pair< int, int >(index, 0));  // Suffix sum for last edge is 0
 
     --index;
 
@@ -558,13 +569,52 @@ int main(int argc, char** argv) {
     }
 
 
+
+    /////////////////////////// Stage 3 //////////////////////////////////////////////////////
+    ///////// Corection /////////
+
+    int correction_value = input.size() - 1;
+    for(auto& suffix : suffix_sum) {
+        suffix.second = correction_value - suffix.second;
+    }
+
+
+
+//    cout << "I'm: " << myid << endl;
+//    for (auto const& x : suffix_sum) {
+//        std::cout << x.first
+//                  << ':'
+//                  << x.second
+//                  << std::endl ;
+//    }
+
+
+    map< int, int > forward_edges;
+
+    // Get only forward edges in structure [position, id]
+    for (auto const& x : directions) {
+        if (x.second == 1){
+            int pos = suffix_sum.at(x.first);
+            forward_edges.insert(pair< int, int >(x.first, pos));
+        }
+    }
+
     cout << "I'm: " << myid << endl;
-    for (auto const& x : suffix_sum)
-    {
-        std::cout << x.first  // string (key)
+    for (auto const& x : forward_edges) {
+        std::cout << x.first
                   << ':'
-                  << x.second // string's value
+                  << x.second
                   << std::endl ;
+    }
+
+    if (!myedge.is_back){
+
+        if (myid == 0){
+            int my_pos = forward_edges.at(myid);
+            int next_id = get_id_for_pos(my_pos + 1, forward_edges);
+            cout << "After me: " << myid << " is " << next_id << endl;
+        }
+
     }
 
 
