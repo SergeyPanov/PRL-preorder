@@ -539,7 +539,9 @@ int main(int argc, char** argv) {
     int index = positiones_edges.size() - 1;    // Start from last
     map< int, int > suffix_sum;  // Map with suffix sums
 
-    suffix_sum.insert(pair< int, int >(index, 0));  // Suffix sum for last edge is 0
+    int e_id = positiones_edges.at(index);
+
+    suffix_sum.insert(pair< int, int >(e_id, 0));  // Suffix sum for last edge is 0
 
     --index;
 
