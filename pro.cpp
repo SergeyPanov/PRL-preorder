@@ -363,6 +363,9 @@ vector< pair< Edge, int > > calculate_positions(vector< pair< Edge, Edge > > eto
     int edge_index = 0;
     vector< pair< Edge, int > > positiones_edges;
 
+
+    map< int, int > positions;
+
     Edge next_edge;
 
     // Find first edge
@@ -374,6 +377,8 @@ vector< pair< Edge, int > > calculate_positions(vector< pair< Edge, Edge > > eto
 
     positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
 
+    positions.insert(pair< int, int > (next_edge.my_id, edge_index));
+
     ++edge_index;
 
     while (edge_index < etour.size()){
@@ -383,6 +388,7 @@ vector< pair< Edge, int > > calculate_positions(vector< pair< Edge, Edge > > eto
             if (next_edge.my_id == etour[i].first.my_id){
                 next_edge = etour[i].second;
                 positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
+                positions.insert(pair< int, int > (next_edge.my_id, edge_index));
                 ++edge_index;
                 break;
             }
@@ -512,25 +518,50 @@ int main(int argc, char** argv) {
 
 
     ///////// Receive directions(0 is backward, 1 is forward) /////////
-    vector< pair< int, int > > directions;
+    map< int, int > directions;
+//    vector< pair< int, int > > directions;
     for (int l = 0; l < numprocs; ++l) {
         int direction;
         MPI_Recv(&direction, 1, MPI_INT, l, TAG, MPI_COMM_WORLD, &stat);
 
         pair< int, int > pr = pair< int, int > (l, direction);
-        directions.push_back(pr);
+        directions.insert(pr);
     }
+
+//    for (auto const& x : directions)
+//    {
+//        std::cout << x.first  // string (key)
+//                  << ':'
+//                  << x.second // string's value
+//                  << std::endl ;
+//    }
 
     /////////////////////////// Stage 2 //////////////////////////////////////////////////////
     ///////// Calculate suffix sum based on positions and direction /////////
 
+//    int index = positiones_edges.size() - 1;    // Start from last
+//    vector< pair< int, int > > suffix_sum;  // Vector with suffix sums
+//    int total_suffix_sum = 0;
+//    while (index < positiones_edges.size()){
+//
+//        for (int i = 0; i < positiones_edges.size(); ++i) {
+//            if (positiones_edges[i].first == index){
+//
+//                if (index == positiones_edges.size() - 1){
+//                    total_suffix_sum = 0;
+//                } else{
+//                    total_suffix_sum +=
+//                }
+//
+//            }
+//        }
+//
+//    }
 
-
-
-    cout << "------------------------------------------------------" << endl;
-    for (int m = 0; m < directions.size(); ++m) {
-        cout << "Proc: " << directions[m].first << " has direction: " << directions[m].second << endl;
-    }
+//    cout << "------------------------------------------------------" << endl;
+//    for (int m = 0; m < directions.size(); ++m) {
+//        cout << "Proc: " << directions[m].first << " has direction: " << directions[m].second << endl;
+//    }
 
 
 
