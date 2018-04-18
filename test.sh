@@ -18,6 +18,6 @@ echo $nodes >> tree
 /Users/sergeypanov/bin/mpi/bin/mpic++ -o pro pro.cpp
 
 ##spusteni
-/Users/sergeypanov/bin/mpi/bin/mpirun -np 1 pro
+/Users/sergeypanov/bin/mpi/bin/mpirun -np $procs pro
 ##uklid
 rm -f pro tree

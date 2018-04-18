@@ -329,6 +329,10 @@ Edge get_my_next(const map< char, vector< pair< Edge, Edge > > > &adj_list, vect
 
     Edge next_edge = next(rev, adj_list);
 
+    if (next_edge.my_id == -1){
+        next_edge = get_first_from_list(adj_list, rev);
+    }
+
     return next_edge;
 }
 
@@ -423,8 +427,20 @@ int main(int argc, char** argv) {
 
 
         vector<Edge> edges = constructEdges(input);
-        //map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
+//        map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
+//
+//
+//        for (int i = 0; i < edges.size(); ++i) {
+//            Edge next_edge = get_my_next(list, edges, edges[i]);
+//
+//            pair< Edge, Edge > pr = pair< Edge, Edge >(edges[i], next_edge);
+//
+//            display_edge(pr);
+//
+//        }
+
         //vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
+
 
         // Broadcast profiles to all processes
         for (int i = 0; i < numprocs; ++i) {
@@ -434,10 +450,10 @@ int main(int argc, char** argv) {
         // Send broadcast input
         int input_size = static_cast<int>(input.size());
         for (int j = 0; j < numprocs; ++j) {
-
             MPI_Send(&input_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);
             MPI_Send(input.c_str(), static_cast<int>(input.size()), MPI_CHAR, j, TAG, MPI_COMM_WORLD);
         }
+
         /*
         // Broadcast root node
         for (int k = 0; k < numprocs; ++k) {
