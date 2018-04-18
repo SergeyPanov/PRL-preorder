@@ -505,10 +505,54 @@ int main(int argc, char** argv) {
 
     Edge my_next = get_my_next(list, edges, myedge);
 
-    pair< Edge, Edge > couple = pair<Edge, Edge>(myedge, my_next);
+    pair< Edge, Edge > me_mynext = pair<Edge, Edge>(myedge, my_next);
 
     cout << "ME: " << myid << endl;
-    display_edge(couple);
+//    display_edge(me_mynext);
+
+    vector< pair< Edge, Edge > > complete_etour;
+
+    // Broadcast information about my next to all processors. Create complete etour
+    for (int k = 0; k < numprocs; ++k) {
+        vector< unsigned char > vec = serialize_pair(me_mynext);
+        int local_size = static_cast<int>(vec.size());
+
+        MPI_Send(&local_size, 1, MPI_INT, k, TAG, MPI_COMM_WORLD);
+
+        MPI_Send(vec.data(), static_cast<int>(vec.size()), MPI_UNSIGNED_CHAR, k, TAG, MPI_COMM_WORLD);
+    }
+
+    // Receive broadcasted edges
+    for (int l = 0; l < numprocs; ++l) {
+        int loc_size;
+        MPI_Recv(&loc_size, 1, MPI_INT, l, TAG, MPI_COMM_WORLD, &stat);
+
+        vector<unsigned char > vec;
+        vec.resize(sizeof(pair< Edge, Edge >));
+
+        MPI_Recv(vec.data(), vec.size(), MPI_UNSIGNED_CHAR, l, TAG , MPI_COMM_WORLD, &stat);
+        pair< Edge, Edge > pr = deserialize_to_pair_of< Edge >(vec);
+
+
+        complete_etour.push_back(pr);
+    }
+
+
+    vector< pair< Edge, int > > positiones_edges;
+
+    positiones_edges = calculate_positions(complete_etour, input[0]);
+
+    cout << "I'm: " << myid << endl;
+
+    for (int l = 0; l < positiones_edges.size(); ++l) {
+        cout << "Edge: " << positiones_edges[l].first.my_id << " on position: " << positiones_edges[l].second << endl;
+    }
+
+
+//    display_etour(complete_etour);
+
+
+
 
 
 
