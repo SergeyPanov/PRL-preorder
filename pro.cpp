@@ -377,7 +377,7 @@ map<int, int> calculate_positions(vector< pair< Edge, Edge > > etour, char root)
 
     positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
 
-    positions.insert(pair< int, int > (next_edge.my_id, edge_index));
+    positions.insert(pair< int, int > (edge_index, next_edge.my_id));
 
     ++edge_index;
 
@@ -388,7 +388,7 @@ map<int, int> calculate_positions(vector< pair< Edge, Edge > > etour, char root)
             if (next_edge.my_id == etour[i].first.my_id){
                 next_edge = etour[i].second;
                 positiones_edges.push_back(pair< Edge, int > (next_edge, edge_index) );
-                positions.insert(pair< int, int > (next_edge.my_id, edge_index));
+                positions.insert(pair< int, int > (edge_index, next_edge.my_id));
                 ++edge_index;
                 break;
             }
