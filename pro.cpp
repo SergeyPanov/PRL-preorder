@@ -84,7 +84,7 @@ pair< Edge, Edge > make_pair(Edge from, Edge to){
     return pr;
 }
 
-void show_map(map< char, vector< pair< Edge, Edge > > > adjacencies){
+void display_adacency_list(map< char, vector< pair< Edge, Edge > > > adjacencies){
 
     for ( auto it = adjacencies.begin(); it != adjacencies.end(); ++it  ) {
         std::cout << it->first <<  std::endl;
@@ -322,13 +322,23 @@ Edge get_first_from_list(map< char, vector< pair< Edge, Edge > > > adj_list, Edg
 }
 
 
+Edge get_my_next(const map< char, vector< pair< Edge, Edge > > > &adj_list, vector< Edge > edges, Edge me) {
+    Edge my_next = {-1};
+
+    Edge rev = get_reversed(me, edges);
+
+    Edge next_edge = next(rev, adj_list);
+
+    return next_edge;
+}
+
+
 vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge, Edge > > > &adj_list, vector< Edge > edges, string nodes) {
 
     nodes = " " + nodes;
 
     vector< pair<Edge, Edge> > etour;
     for (int i = 0; i < edges.size(); ++i) {
-
         Edge rev = get_reversed(edges[i], edges);
 
         Edge next_edge = next(rev, adj_list);
@@ -336,9 +346,7 @@ vector< pair< Edge, Edge > > construct_etour(const map< char, vector< pair< Edge
         if (next_edge.my_id == -1){
             next_edge = get_first_from_list(adj_list, rev);
         }
-
         etour.push_back(pair< Edge, Edge >(edges[i], next_edge));
-
     }
 
 
@@ -415,20 +423,29 @@ int main(int argc, char** argv) {
 
 
         vector<Edge> edges = constructEdges(input);
-        map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
-        vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
+        //map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input);
+        //vector< pair< Edge, Edge > > tour = construct_etour(list, edges, input);
 
         // Broadcast profiles to all processes
         for (int i = 0; i < numprocs; ++i) {
             MPI_Send(&edges[i], sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD);
         }
 
+        // Send broadcast input
+        int input_size = static_cast<int>(input.size());
+        for (int j = 0; j < numprocs; ++j) {
+
+            MPI_Send(&input_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);
+            MPI_Send(input.c_str(), static_cast<int>(input.size()), MPI_CHAR, j, TAG, MPI_COMM_WORLD);
+        }
+        /*
         // Broadcast root node
         for (int k = 0; k < numprocs; ++k) {
             MPI_Send(&input[0], sizeof(char), MPI_CHAR, k, TAG, MPI_COMM_WORLD);
-        }
+        }*/
 
-        // Broadcast etour
+
+        /*// Broadcast etour
         tour_size = static_cast<int>(tour.size());
         for (int j = 0; j < numprocs; ++j) {
             MPI_Send(&tour_size, 1, MPI_INT, j, TAG, MPI_COMM_WORLD);  // Send size of tour
@@ -446,20 +463,57 @@ int main(int argc, char** argv) {
 
 //                MPI_Send(&tour[i], sizeof(pair<Edge, Edge>), MPI_UNSIGNED, j, TAG, MPI_COMM_WORLD);  // Send tour
             }
-        }
+        }*/
 
     }
 
 
     // Receive information about myself
     MPI_Recv(&myedge, sizeof(Edge), MPI_UNSIGNED, 0, TAG ,MPI_COMM_WORLD, &stat);
+//    cout << "I'm: " << myid << " received edge: " << myedge.my_id << " " << myedge.from_node << " " << myedge.to_node << " " << myedge.is_back << endl;
 
-    // Receive root node
-    char root;
-    MPI_Recv(&root, sizeof(char), MPI_CHAR, 0, TAG ,MPI_COMM_WORLD, &stat);
-    cout << "I'm: " << myid << " received root: " << root << endl;
+    int input_size;
+    MPI_Recv(&input_size, 1, MPI_INT, 0, TAG, MPI_COMM_WORLD, &stat);
+//    cout << "I'm: " << myid << " gonna to receive: " << input_size << endl;
 
-    // Receive etour
+
+    string input;
+    input.resize(input_size);
+    MPI_Recv((void *) input.data(), input_size, MPI_CHAR, 0, TAG, MPI_COMM_WORLD, &stat);
+//    cout << "I'm: " << myid << " received: " << input << endl;
+
+
+    vector<Edge> edges = constructEdges(input); // Create vector of edges
+    map< char, vector< pair< Edge, Edge > > > list = construct_adacency_list(edges, input); // Create adjacency list
+
+
+    Edge my_next = get_my_next(list, edges, myedge);
+
+    pair< Edge, Edge > couple = pair<Edge, Edge>(myedge, my_next);
+
+    cout << "ME: " << myid << endl;
+    display_edge(couple);
+
+
+
+//    for (int k = 0; k < edges.size(); ++k) {
+////        cout << "I'm: " << myid << endl;
+//        display_one_direction(edges[k]);
+//    }
+
+//    display_adacency_list(list);
+
+
+
+
+
+         /*
+         // Receive root node
+         char root;
+         MPI_Recv(&root, sizeof(char), MPI_CHAR, 0, TAG ,MPI_COMM_WORLD, &stat);
+         cout << "I'm: " << myid << " received root: " << root << endl;*/
+
+    /*// Receive etour
     MPI_Recv(&tour_size, 1, MPI_INT, 0, TAG ,MPI_COMM_WORLD, &stat);
     pair< Edge, Edge > pr;
     int loc_size;
@@ -475,9 +529,11 @@ int main(int argc, char** argv) {
         pair< Edge, Edge > pr = deserialize_to_pair_of< Edge >(vec);
 
         my_tour.push_back(pr);
-    }
+    }*/
 
-    /////////////////////////////////////////////////////
+
+
+    /*/////////////////////////////////////////////////////
     int edge_index = 0;
     vector< pair< Edge, int > > positiones_edges;
 
@@ -512,7 +568,7 @@ int main(int argc, char** argv) {
     for (int l = 0; l < positiones_edges.size(); ++l) {
         cout << "Edge: " << positiones_edges[l].first.my_id << " on position: " << positiones_edges[l].second << endl;
     }
-    /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////*/
 
 
     MPI_Finalize();
