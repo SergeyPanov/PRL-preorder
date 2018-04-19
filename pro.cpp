@@ -385,7 +385,7 @@ int get_id_for_pos(int pos, map<int, int> id_pos) {
 int get_currect_succ(int iteration, map< int, int > succs, int myid){
 
     int succ = succs.at(myid);
-    for (int i = 1; i <= iteration; ++i) {
+    for (int i = 1; i < iteration*2; ++i) {
         succ = succs.at(succ);
     }
 
@@ -552,31 +552,22 @@ int main(int argc, char **argv) {
         my_val = !myedge.is_back;
     }
 
-    int ssucc = succ;
+
     for (int i = 0; i < logarithm; ++i) {
 
-        cout << "I'm: " << myid << " my succ " << succ << endl;
+        succ = get_currect_succ(i, map_tour, myid);
 
         for (int t = 0; t < numprocs; ++t) {
             MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Broadcast own value
         }
 
-        // Broadcast my succ
-        for (int t = 0; t < numprocs; ++t) {
-            MPI_Send(&succ, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Broadcast own value
-        }
-
         int rec_value;
         MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
-//        cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
+        cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
 
-        // Receive succ of succ
-        MPI_Recv(&ssucc, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
-
-        succ = ssucc;
         my_val = my_val + rec_value;
 
-        cout << "I'm: " << myid << " my next succ " << succ << endl;
+//        succ = map_tour.at(succ);
     }
     cout << "I'm: " << myid << " finished with " << my_val << endl;
 
