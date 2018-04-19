@@ -2,7 +2,7 @@
 // Project: PRL-preorder-traversal
 
 #include <iostream>
-#include "/Users/sergeypanov/bin/mpi/include/mpi.h"
+#include <mpi.h>
 #include <fstream>
 #include <vector>
 #include <map>
