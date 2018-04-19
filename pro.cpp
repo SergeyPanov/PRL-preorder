@@ -529,7 +529,8 @@ int main(int argc, char **argv) {
 //    int ssucc;
 
 //    cout << "----- I " << myid << " after me " << succ << " ----" << endl;
-    int logarithm = static_cast<int>(log2(complete_etour.size()));
+    int logarithm = static_cast<int>((log2(complete_etour.size())));
+    cout << complete_etour.size() << " " << log2(complete_etour.size()) << endl;
 
     if (succ == myid){
         my_val = 0;
@@ -538,12 +539,18 @@ int main(int argc, char **argv) {
     }
 
 
-    for (int i = 0; i < logarithm; ++i) {
+    for (auto &it : map_tour) {
+        cout << it.first << ":" << it.second << endl;
+    }
 
-        for (int j = 0; j < logarithm; ++j) {
+
+    for (int i = 0; i < logarithm; ++i) {
+        int ssucc = succ;
+
+//        for (int j = 0; j < logarithm; ++j) {
             // Each broadcast it's value
-            for (int j = 0; j < numprocs; ++j) {
-                MPI_Send(&my_val, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Ask for value
+            for (int t = 0; t < numprocs; ++t) {
+                MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Ask for value
             }
 
 
@@ -553,8 +560,10 @@ int main(int argc, char **argv) {
 
 
             my_val += rec_value;
-            succ = map_tour.at(succ);
-        }
+            ssucc = map_tour.at(ssucc);
+//        }
+
+        succ = map_tour.at(succ);
 
     }
 
