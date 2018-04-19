@@ -522,8 +522,6 @@ int main(int argc, char **argv) {
     }
 
 
-//    map<int, int> suffix_sum;  // Map with suffix sums
-
     int succ = map_tour.at(myid);
 
 
@@ -538,12 +536,8 @@ int main(int argc, char **argv) {
     }
 
 
-
-
+    // Calculate suffix sum
     for (int i = 0; i < numprocs; ++i) {
-
-//        cout << "I'm: " << myid << " ask for value: " << succ << endl;
-
 
         for (int j = 0; j < numprocs; ++j) {
             MPI_Send(&my_val, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Broadcast my value
@@ -564,60 +558,24 @@ int main(int argc, char **argv) {
             }
         }
 
-
     }
-//    cout << "I'm: " << myid << " finished with " << my_val << endl;
-
-
-
-
 
     // Broadcast my value
     for (int i = 0; i < numprocs; ++i) {
         MPI_Send(&my_val, 1, MPI_INT, i, TAG, MPI_COMM_WORLD);
-//        cout << "I'm: " << myid << " send " << my_val << " to " << i << endl;
     }
 
     map<int, int> suffix_sum;  // Map with suffix sums
 
     suffix_sum.insert(pair<int, int> (myid, my_val));
-//    // Receive all values
-//    int value;
+
+    // Receive all values
     for (int i = 0; i < numprocs; ++i) {
         int v;
         MPI_Recv(&v, 1, MPI_INT, i, TAG, MPI_COMM_WORLD, &stat);
         suffix_sum.insert(pair< int, int >(i, v));
-//        cout << "I " << myid << " received " << v << " from " << i << endl;
+
     }
-
-//    for (auto& it : suffix_sum){
-//        cout << "I'm: " << myid << " " << it.first << ":" << it.second << endl;
-//    }
-
-
-    ///////// Calculate suffix sum based on positions and direction /////////
-//
-//    int index = positiones_edges.size() - 1;    // Start from last
-//    map<int, int> suffix_sum;  // Map with suffix sums
-//
-//    int e_id = positiones_edges.at(index);
-//
-//    suffix_sum.insert(pair<int, int>(index, 0));  // Suffix sum for last edge is 0
-//
-//    --index;
-//
-//    int total_suffix_sum = 0;
-//
-//    while (index >= 0) {
-//
-//        int edge_id = positiones_edges.at(index);
-//
-//        total_suffix_sum += directions.at(edge_id);
-//
-//        suffix_sum.insert(pair<int, int>(edge_id, total_suffix_sum));
-//        --index;
-//    }
-
 
 
     ///////// Corection /////////
