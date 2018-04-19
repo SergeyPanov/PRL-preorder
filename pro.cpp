@@ -387,6 +387,7 @@ int main(int argc, char **argv) {
 
     int numprocs;
     int myid;
+    int my_val;
 
     MPI_Request request;
     MPI_Status stat;
@@ -450,7 +451,7 @@ int main(int argc, char **argv) {
 
     pair<Edge, Edge> me_mynext;
 
-    if (myid == numprocs -1){
+    if (my_next.my_id == 0){
         me_mynext = pair<Edge, Edge>(myedge, myedge);
     } else{
         me_mynext = pair<Edge, Edge>(myedge, my_next);
@@ -522,7 +523,7 @@ int main(int argc, char **argv) {
 
     map<int, int> suffix_sum;  // Map with suffix sums
 
-    int my_val;
+
 
 
     int succ = map_tour.at(myid);
@@ -547,25 +548,27 @@ int main(int argc, char **argv) {
     for (int i = 0; i < logarithm; ++i) {
         int ssucc = succ;
 
-//        for (int j = 0; j < logarithm; ++j) {
-            // Each broadcast it's value
-            for (int t = 0; t < numprocs; ++t) {
-                MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Ask for value
-            }
+
+        for (int t = 0; t < numprocs; ++t) {
+            MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Ask for value
+        }
 
 
-            int rec_value;
-            MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
-            cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
+        int rec_value;
+        MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
+        cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
 
 
-            my_val += rec_value;
-            ssucc = map_tour.at(ssucc);
-//        }
+        my_val = my_val + rec_value;
+        ssucc = map_tour.at(ssucc);
 
         succ = map_tour.at(succ);
-
     }
+
+
+    cout << "I'm: " << myid << " finished with " << my_val << endl;
+
+
 
 //    for (int i = 0; i < logarithm; ++i) {
 //        cout << "Iteration: " << i << endl;
@@ -598,7 +601,6 @@ int main(int argc, char **argv) {
 //    }
 
 
-    cout << "I'm: " << myid << " finished with " << my_val << endl;
 
 
 //    succ = map_tour.at(succ);
