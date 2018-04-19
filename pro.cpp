@@ -539,19 +539,22 @@ int main(int argc, char **argv) {
 
 
     for (int i = 0; i < logarithm; ++i) {
-        cout << "Iteration: " << i << endl;
 
-        // Each broadcast it's value
-        for (int j = 0; j < numprocs; ++j) {
-            MPI_Send(&my_val, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Ask for value
+        for (int j = 0; j < logarithm; ++j) {
+            // Each broadcast it's value
+            for (int j = 0; j < numprocs; ++j) {
+                MPI_Send(&my_val, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Ask for value
+            }
+
+
+            int rec_value;
+            MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
+            cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
+
+
+            my_val += rec_value;
+            succ = map_tour.at(succ);
         }
-
-
-        int rec_value;
-        MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
-
-        my_val += rec_value;
-        succ = map_tour.at(succ);
 
     }
 
