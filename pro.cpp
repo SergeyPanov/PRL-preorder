@@ -1,5 +1,5 @@
-// Author: xpanov00
-// Project: PRL-preorder-traversal
+// Author: xpanov00 //
+// Project: PRL-preorder-traversal //
 
 #include <iostream>
 #include "/Users/sergeypanov/bin/mpi/include/mpi.h"
