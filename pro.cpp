@@ -296,6 +296,10 @@ Edge get_reversed(Edge e, vector<Edge> edges) {
 
 }
 
+int get_reverse_id(Edge e, vector<Edge> edges){
+    return (get_reversed(e, edges)).my_id;
+}
+
 // Get first edge for the given edge, using for creating etour
 Edge get_first_from_list(map<char, vector<pair<Edge, Edge> > > adj_list, Edge e) {
 
@@ -553,19 +557,31 @@ int main(int argc, char **argv) {
     }
 
 
-    for (int i = 0; i < logarithm; ++i) {
+//    for (auto& it : map_tour){
+//        cout << it.first << ":" << it.second << endl;
+//    }
+
+    for (int i = 0; i < numprocs; ++i) {
 
         succ = get_currect_succ(i, map_tour, myid);
 
-        for (int t = 0; t < numprocs; ++t) {
-            MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Broadcast own value
+        cout << "I'm: " << myid << " ask for value: " << succ << endl;
+
+
+        for (int j = 0; j < numprocs; ++j) {
+            MPI_Send(&my_val, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Broadcast my value
         }
 
-        int rec_value;
-        MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
-        cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
+        for (int k = 0; k < numprocs; ++k) {
+            int value = 0;
 
-        my_val = my_val + rec_value;
+            MPI_Recv(&value, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);
+
+            if (stat.MPI_SOURCE == succ){
+                my_val = my_val + value;
+            }
+        }
+
 
 //        succ = map_tour.at(succ);
     }
