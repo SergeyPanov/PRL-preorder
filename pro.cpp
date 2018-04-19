@@ -608,37 +608,72 @@ int main(int argc, char** argv) {
 //    }
 
 
-
-
     if (!myedge.is_back){
 
         int my_pos = forward_edges.at(myid);
 
         int next_id = get_id_for_pos(my_pos + 1, forward_edges);
 
+
+        MPI_Send(&myedge.to_node, 1, MPI_CHAR, 0, TAG, MPI_COMM_WORLD);   // Each processor send his node to proc 0
+
         if (myid == 0){
 //            cout << "I'm: " << myid << " my next: " << next_id << endl;
 
-            cout << myedge.from_node << myedge.to_node;
+//            cout << myedge.from_node << myedge.to_node;
 
-            MPI_Send(&next_id, 1, MPI_INT, next_id, TAG, MPI_COMM_WORLD);
+            string traversal;
 
-        } else{
-            int dummy;
-            int prev_id = get_id_for_pos(my_pos - 1, forward_edges);
+            traversal = traversal + myedge.from_node;
 
-//            cout << "I'm: " << myid << " my next: " << next_id << endl;
+            for (int i = 0; i < forward_edges.size(); ++i) {
 
-            MPI_Recv(&dummy, 1, MPI_INT, prev_id, TAG, MPI_COMM_WORLD, &stat);
-            cout << myedge.to_node;
+                int proc_id = get_id_for_pos(i, forward_edges);
 
-            if (next_id != -1){
-                MPI_Send(&next_id, 1, MPI_INT, next_id, TAG, MPI_COMM_WORLD);
+                char ch;
+
+                MPI_Recv(&ch, 1, MPI_CHAR, proc_id, TAG, MPI_COMM_WORLD, &stat);
+
+                traversal = traversal + ch;
+
             }
+
+            cout << traversal << endl;
+
 
         }
 
     }
+
+//    if (!myedge.is_back){
+//
+//        int my_pos = forward_edges.at(myid);
+//
+//        int next_id = get_id_for_pos(my_pos + 1, forward_edges);
+//
+//        if (myid == 0){
+////            cout << "I'm: " << myid << " my next: " << next_id << endl;
+//
+//            cout << myedge.from_node << myedge.to_node;
+//
+//            MPI_Send(&next_id, 1, MPI_INT, next_id, TAG, MPI_COMM_WORLD);
+//
+//        } else{
+//            int dummy;
+//            int prev_id = get_id_for_pos(my_pos - 1, forward_edges);
+//
+////            cout << "I'm: " << myid << " my next: " << next_id << endl;
+//
+//            MPI_Recv(&dummy, 1, MPI_INT, prev_id, TAG, MPI_COMM_WORLD, &stat);
+//            cout << myedge.to_node;
+//
+//            if (next_id != -1){
+//                MPI_Send(&next_id, 1, MPI_INT, next_id, TAG, MPI_COMM_WORLD);
+//            }
+//
+//        }
+//
+//    }
 
 
 
