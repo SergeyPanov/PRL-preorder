@@ -382,6 +382,25 @@ int get_id_for_pos(int pos, map<int, int> id_pos) {
 
 }
 
+int get_currect_succ(int iteration, map< int, int > succs, int myid){
+
+    int succ = succs.at(myid);
+    for (int i = 1; i <= iteration; ++i) {
+        succ = succs.at(succ);
+    }
+
+    return succ;
+
+}
+
+int get_last_id(map< int, int > map_tour){
+    for (auto &it : map_tour) {
+        if (it.first == it.second){
+            return it.first;
+        }
+    }
+}
+
 
 int main(int argc, char **argv) {
 
@@ -391,6 +410,7 @@ int main(int argc, char **argv) {
 
     MPI_Request request;
     MPI_Status stat;
+    int my_old;
 
     int tour_size;
 
@@ -505,7 +525,6 @@ int main(int argc, char **argv) {
         MPI_Send(&direction, 1, MPI_INT, k, TAG, MPI_COMM_WORLD);
     }
 
-
     ///////// Receive directions(0 is backward, 1 is forward) /////////
     map<int, int> directions;
 //    vector< pair< int, int > > directions;
@@ -518,20 +537,14 @@ int main(int argc, char **argv) {
     }
 
 
-
-
-
-    map<int, int> suffix_sum;  // Map with suffix sums
-
-
-
+//    map<int, int> suffix_sum;  // Map with suffix sums
 
     int succ = map_tour.at(myid);
-//    int ssucc;
 
-//    cout << "----- I " << myid << " after me " << succ << " ----" << endl;
-    int logarithm = static_cast<int>((log2(complete_etour.size())));
-    cout << complete_etour.size() << " " << log2(complete_etour.size()) << endl;
+
+    int logarithm = static_cast<int>(ceil(log2(complete_etour.size())));
+
+    my_old = my_val;
 
     if (succ == myid){
         my_val = 0;
@@ -540,79 +553,44 @@ int main(int argc, char **argv) {
     }
 
 
-    for (auto &it : map_tour) {
-        cout << it.first << ":" << it.second << endl;
-    }
-
-
     for (int i = 0; i < logarithm; ++i) {
-        int ssucc = succ;
 
+        succ = get_currect_succ(i, map_tour, myid);
 
         for (int t = 0; t < numprocs; ++t) {
-            MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Ask for value
+            MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Broadcast own value
         }
-
 
         int rec_value;
         MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
-        cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
-
+//        cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
 
         my_val = my_val + rec_value;
-        ssucc = map_tour.at(ssucc);
 
         succ = map_tour.at(succ);
     }
-
-
-    cout << "I'm: " << myid << " finished with " << my_val << endl;
-
-
-
-//    for (int i = 0; i < logarithm; ++i) {
-//        cout << "Iteration: " << i << endl;
-//
-//        if (myid != succ){
-//            MPI_Send(&myid, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD); // Ask for value
-//            cout << "----- I " << myid << " asked " << succ << " ----" << endl;
-//        }
-//        int rec_value;
-//
-//        if (myid != 0){
-//
-//            MPI_Recv(&rec_value, 1, MPI_INT, MPI_ANY_SOURCE, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
-//
-//            cout << "----- I " << myid << " received from " << stat.MPI_SOURCE << " ----" << endl;
-//
-//            MPI_Send(&my_val, 1, MPI_INT, stat.MPI_SOURCE, TAG, MPI_COMM_WORLD); // Ask for value
-//
-//            cout << "----- I " << myid << " replied to " << stat.MPI_SOURCE << " ----" << endl;
-//        }
-//
-//        if (myid != succ){
-//            MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
-//            my_val += rec_value;
-//            cout << "----- I " << myid << " received " << rec_value << " from " << stat.MPI_SOURCE << " my new val is: " << my_val << " ----" << endl;
-//        }
-//
-//        succ = map_tour.at(succ);
-//
-//    }
+//    cout << "I'm: " << myid << " finished with " << my_val << endl;
 
 
 
+    int vvvv = my_val;
 
-//    succ = map_tour.at(succ);
+    // Broadcast my value
+    for (int i = 0; i < numprocs; ++i) {
+        MPI_Send(&vvvv, 1, MPI_INT, i, TAG, MPI_COMM_WORLD);
+        cout << "I'm: " << myid << " send " << vvvv << " to " << i << endl;
+    }
 
+    map<int, int> suffix_sum;  // Map with suffix sums
 
-
-//        int rec_value;
-//        MPI_Recv(&rec_value, 1, MPI_INT, MPI_ANY_SOURCE, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
-//        cout << "I " << myid << " " << stat.MPI_SOURCE << " replied to me with value " << rec_value << endl;
-//        succ = map_tour.at(succ);
-//    }
-
+    suffix_sum.insert(pair<int, int> (myid, my_val));
+//    // Receive all values
+//    int value;
+    for (int i = 0; i < numprocs; ++i) {
+        int v;
+        MPI_Recv(&v, 1, MPI_INT, i, TAG, MPI_COMM_WORLD, &stat);
+//        cout << "I " << myid << " received " << v << " from " << i << endl;
+    }
 
 
     ///////// Calculate suffix sum based on positions and direction /////////
