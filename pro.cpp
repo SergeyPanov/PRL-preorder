@@ -590,9 +590,9 @@ int main(int argc, char **argv) {
 //        cout << "I " << myid << " received " << v << " from " << i << endl;
     }
 
-    for (auto& it : suffix_sum){
-        cout << "I'm: " << myid << " " << it.first << ":" << it.second << endl;
-    }
+//    for (auto& it : suffix_sum){
+//        cout << "I'm: " << myid << " " << it.first << ":" << it.second << endl;
+//    }
 
 
     ///////// Calculate suffix sum based on positions and direction /////////
@@ -618,7 +618,7 @@ int main(int argc, char **argv) {
 //        --index;
 //    }
 
-/*
+
 
     ///////// Corection /////////
 
@@ -671,7 +671,7 @@ int main(int argc, char **argv) {
         }
 
     }
-*/
+
 
     MPI_Finalize();
     return 0;
