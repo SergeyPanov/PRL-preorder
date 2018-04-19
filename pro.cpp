@@ -552,27 +552,36 @@ int main(int argc, char **argv) {
         my_val = !myedge.is_back;
     }
 
-
+    int ssucc = succ;
     for (int i = 0; i < logarithm; ++i) {
 
-        succ = get_currect_succ(i, map_tour, myid);
+        cout << "I'm: " << myid << " my succ " << succ << endl;
 
         for (int t = 0; t < numprocs; ++t) {
             MPI_Send(&my_val, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Broadcast own value
+        }
+
+        // Broadcast my succ
+        for (int t = 0; t < numprocs; ++t) {
+            MPI_Send(&succ, 1, MPI_INT, t, TAG, MPI_COMM_WORLD); // Broadcast own value
         }
 
         int rec_value;
         MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
 //        cout << "I'm: " << myid << " received " << rec_value << " from " << succ << " my new value is: " << my_val + rec_value << endl;
 
+        // Receive succ of succ
+        MPI_Recv(&ssucc, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);
+
+        succ = ssucc;
         my_val = my_val + rec_value;
 
-        succ = map_tour.at(succ);
+        cout << "I'm: " << myid << " my next succ " << succ << endl;
     }
-//    cout << "I'm: " << myid << " finished with " << my_val << endl;
+    cout << "I'm: " << myid << " finished with " << my_val << endl;
 
 
-
+/*
     int vvvv = my_val;
 
     // Broadcast my value
@@ -592,7 +601,7 @@ int main(int argc, char **argv) {
 //        cout << "I " << myid << " received " << v << " from " << i << endl;
     }
 
-
+*/
     ///////// Calculate suffix sum based on positions and direction /////////
 //
 //    int index = positiones_edges.size() - 1;    // Start from last
