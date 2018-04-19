@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <math.h>
 
 #define TAG 0
 
@@ -55,6 +56,50 @@ typedef struct Edge {
     bool is_back;
 } Edge;
 
+
+void display_one_direction(Edge e){
+    cout << e.my_id << " " << e.from_node << " " << e.to_node << " " << e.is_back << endl;
+}
+
+void display_edge(pair< Edge, Edge > p){
+    cout << "first: "<< endl;
+    display_one_direction(p.first);
+
+    cout << "second: "<< endl;
+    display_one_direction(p.second);
+}
+void display_adacency_list(map< char, vector< pair< Edge, Edge > > > adjacencies){
+
+    for ( auto it = adjacencies.begin(); it != adjacencies.end(); ++it  ) {
+        std::cout << it->first <<  std::endl;
+
+        for (int i = 0; i < it->second.size(); ++i) {
+            display_edge(it->second[i]);
+        }
+    }
+
+}
+void display_etour(vector< pair<Edge, Edge> > tour){
+
+    for (int i = 0; i < tour.size(); ++i) {
+        cout << "After: ";
+        display_one_direction(tour[i].first);
+        cout << "Is: ";
+        display_one_direction(tour[i].second);
+    }
+
+}
+void display_vector(vector< pair< Edge, Edge > > vec){
+    for (int i = 0; i < vec.size(); ++i) {
+
+        cout << "[\nFrom edge: ";
+        display_one_direction(vec[i].first);
+        cout << "To edge: ";
+        display_one_direction(vec[i].second);
+        cout << "]" << endl;
+
+    }
+}
 
 // Construct single edge
 Edge make_edge(int id, char from_node, char to_node, bool is_back) {
@@ -403,8 +448,13 @@ int main(int argc, char **argv) {
 
     Edge my_next = get_my_next(list, edges, myedge);
 
-    pair<Edge, Edge> me_mynext = pair<Edge, Edge>(myedge, my_next);
+    pair<Edge, Edge> me_mynext;
 
+    if (myid == numprocs -1){
+        me_mynext = pair<Edge, Edge>(myedge, myedge);
+    } else{
+        me_mynext = pair<Edge, Edge>(myedge, my_next);
+    }
 
     vector<pair<Edge, Edge> > complete_etour;
 
@@ -433,9 +483,15 @@ int main(int argc, char **argv) {
     }
 
 
+    // Etour as map
+    map< int, int > map_tour;
+    for (int m = 0; m < complete_etour.size(); ++m) {
+        map_tour.insert(pair< int, int >(complete_etour[m].first.my_id, complete_etour[m].second.my_id));
+    }
+
+
     map<int, int> positiones_edges;
     positiones_edges = calculate_positions(complete_etour, input[0]);   // Calculate positions of each edge
-
 
 
     ////////////////////////////////// Pre order algorithm //////////////////////////////////
@@ -461,30 +517,114 @@ int main(int argc, char **argv) {
     }
 
 
-    ///////// Calculate suffix sum based on positions and direction /////////
 
-    int index = positiones_edges.size() - 1;    // Start from last
+
+
     map<int, int> suffix_sum;  // Map with suffix sums
 
-    int e_id = positiones_edges.at(index);
+    int my_val;
 
-    suffix_sum.insert(pair<int, int>(index, 0));  // Suffix sum for last edge is 0
 
-    --index;
+    int succ = map_tour.at(myid);
+//    int ssucc;
 
-    int total_suffix_sum = 0;
+//    cout << "----- I " << myid << " after me " << succ << " ----" << endl;
+    int logarithm = static_cast<int>(log2(complete_etour.size()));
 
-    while (index >= 0) {
-
-        int edge_id = positiones_edges.at(index);
-
-        total_suffix_sum += directions.at(edge_id);
-
-        suffix_sum.insert(pair<int, int>(edge_id, total_suffix_sum));
-        --index;
+    if (succ == myid){
+        my_val = 0;
+    } else{
+        my_val = !myedge.is_back;
     }
 
 
+    for (int i = 0; i < logarithm; ++i) {
+        cout << "Iteration: " << i << endl;
+
+        // Each broadcast it's value
+        for (int j = 0; j < numprocs; ++j) {
+            MPI_Send(&my_val, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Ask for value
+        }
+
+
+        int rec_value;
+        MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
+
+        my_val += rec_value;
+        succ = map_tour.at(succ);
+
+    }
+
+//    for (int i = 0; i < logarithm; ++i) {
+//        cout << "Iteration: " << i << endl;
+//
+//        if (myid != succ){
+//            MPI_Send(&myid, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD); // Ask for value
+//            cout << "----- I " << myid << " asked " << succ << " ----" << endl;
+//        }
+//        int rec_value;
+//
+//        if (myid != 0){
+//
+//            MPI_Recv(&rec_value, 1, MPI_INT, MPI_ANY_SOURCE, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
+//
+//            cout << "----- I " << myid << " received from " << stat.MPI_SOURCE << " ----" << endl;
+//
+//            MPI_Send(&my_val, 1, MPI_INT, stat.MPI_SOURCE, TAG, MPI_COMM_WORLD); // Ask for value
+//
+//            cout << "----- I " << myid << " replied to " << stat.MPI_SOURCE << " ----" << endl;
+//        }
+//
+//        if (myid != succ){
+//            MPI_Recv(&rec_value, 1, MPI_INT, succ, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
+//            my_val += rec_value;
+//            cout << "----- I " << myid << " received " << rec_value << " from " << stat.MPI_SOURCE << " my new val is: " << my_val << " ----" << endl;
+//        }
+//
+//        succ = map_tour.at(succ);
+//
+//    }
+
+
+    cout << "I'm: " << myid << " finished with " << my_val << endl;
+
+
+//    succ = map_tour.at(succ);
+
+
+
+//        int rec_value;
+//        MPI_Recv(&rec_value, 1, MPI_INT, MPI_ANY_SOURCE, TAG, MPI_COMM_WORLD, &stat);    // Receive request for value from msg_from
+//        cout << "I " << myid << " " << stat.MPI_SOURCE << " replied to me with value " << rec_value << endl;
+//        succ = map_tour.at(succ);
+//    }
+
+
+
+    ///////// Calculate suffix sum based on positions and direction /////////
+//
+//    int index = positiones_edges.size() - 1;    // Start from last
+//    map<int, int> suffix_sum;  // Map with suffix sums
+//
+//    int e_id = positiones_edges.at(index);
+//
+//    suffix_sum.insert(pair<int, int>(index, 0));  // Suffix sum for last edge is 0
+//
+//    --index;
+//
+//    int total_suffix_sum = 0;
+//
+//    while (index >= 0) {
+//
+//        int edge_id = positiones_edges.at(index);
+//
+//        total_suffix_sum += directions.at(edge_id);
+//
+//        suffix_sum.insert(pair<int, int>(edge_id, total_suffix_sum));
+//        --index;
+//    }
+
+/*
 
     ///////// Corection /////////
 
@@ -537,6 +677,7 @@ int main(int argc, char **argv) {
         }
 
     }
+*/
 
     MPI_Finalize();
     return 0;
