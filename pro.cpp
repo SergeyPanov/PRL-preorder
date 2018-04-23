@@ -366,20 +366,8 @@ int main(int argc, char **argv) {
     input.resize(input_size);
     MPI_Recv((void *) input.data(), input_size, MPI_CHAR, 0, TAG, MPI_COMM_WORLD, &stat);
 
-    // Broadcast information about myself to all procs
-    for (int i = 0; i < numprocs; ++i) {
-        MPI_Send(&myedge, sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD);
-    }
 
-    // Receive infor from others. Construct vector of edges
-    Edge e = myedge;
-    vector<Edge> edges;
-    for (int i = 0; i < numprocs; ++i) {
-        Edge aux = {-1};
-        MPI_Recv(&e, sizeof(Edge), MPI_UNSIGNED, i, TAG, MPI_COMM_WORLD, &stat);
-    }
-
-
+    vector<Edge> edges = constructEdges(input); // Create vector of edges
     map<char, vector<pair<Edge, Edge> > > list = construct_adacency_list(edges, input); // Create adjacency list
 
 
