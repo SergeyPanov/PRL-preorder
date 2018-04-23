@@ -57,49 +57,8 @@ typedef struct Edge {
 } Edge;
 
 
-void display_one_direction(Edge e){
-    cout << e.my_id << " " << e.from_node << " " << e.to_node << " " << e.is_back << endl;
-}
 
-void display_edge(pair< Edge, Edge > p){
-    cout << "first: "<< endl;
-    display_one_direction(p.first);
 
-    cout << "second: "<< endl;
-    display_one_direction(p.second);
-}
-void display_adacency_list(map< char, vector< pair< Edge, Edge > > > adjacencies){
-
-    for ( auto it = adjacencies.begin(); it != adjacencies.end(); ++it  ) {
-        std::cout << it->first <<  std::endl;
-
-        for (int i = 0; i < it->second.size(); ++i) {
-            display_edge(it->second[i]);
-        }
-    }
-
-}
-void display_etour(vector< pair<Edge, Edge> > tour){
-
-    for (int i = 0; i < tour.size(); ++i) {
-        cout << "After: ";
-        display_one_direction(tour[i].first);
-        cout << "Is: ";
-        display_one_direction(tour[i].second);
-    }
-
-}
-void display_vector(vector< pair< Edge, Edge > > vec){
-    for (int i = 0; i < vec.size(); ++i) {
-
-        cout << "[\nFrom edge: ";
-        display_one_direction(vec[i].first);
-        cout << "To edge: ";
-        display_one_direction(vec[i].second);
-        cout << "]" << endl;
-
-    }
-}
 
 // Construct single edge
 Edge make_edge(int id, char from_node, char to_node, bool is_back) {
@@ -296,9 +255,6 @@ Edge get_reversed(Edge e, vector<Edge> edges) {
 
 }
 
-int get_reverse_id(Edge e, vector<Edge> edges){
-    return (get_reversed(e, edges)).my_id;
-}
 
 // Get first edge for the given edge, using for creating etour
 Edge get_first_from_list(map<char, vector<pair<Edge, Edge> > > adj_list, Edge e) {
@@ -337,43 +293,6 @@ Edge get_my_next(const map<char, vector<pair<Edge, Edge> > > &adj_list, vector<E
     return next_edge;
 }
 
-
-// Calculate positions of each edge in euler tour
-map<int, int> calculate_positions(vector<pair<Edge, Edge> > etour, char root) {
-
-    int edge_index = 0;
-
-    map<int, int> positions;
-
-    Edge next_edge;
-
-    // Find first edge
-    for (int j = 0; j < etour.size(); ++j) {
-        if (etour[j].first.my_id == 0 && etour[j].first.from_node == root) {
-            next_edge = etour[j].first;
-        }
-    }
-
-    positions.insert(pair<int, int>(edge_index, next_edge.my_id));
-
-    ++edge_index;
-
-    while (edge_index < etour.size()) {
-
-        for (int i = 0; i < etour.size(); ++i) {
-
-            if (next_edge.my_id == etour[i].first.my_id) {
-                next_edge = etour[i].second;
-                positions.insert(pair<int, int>(edge_index, next_edge.my_id));
-                ++edge_index;
-                break;
-            }
-
-        }
-    }
-
-    return positions;
-}
 
 int get_id_for_pos(int pos, map<int, int> id_pos) {
 
@@ -495,11 +414,6 @@ int main(int argc, char **argv) {
         map_tour.insert(pair< int, int >(complete_etour[m].first.my_id, complete_etour[m].second.my_id));
     }
 
-
-    map<int, int> positiones_edges;
-    positiones_edges = calculate_positions(complete_etour, input[0]);   // Calculate positions of each edge
-
-
     ////////////////////////////////// Pre order algorithm //////////////////////////////////
 
 
@@ -524,7 +438,6 @@ int main(int argc, char **argv) {
 
     int succ = map_tour.at(myid);
 
-
     int logarithm = static_cast<int>(ceil(log2(complete_etour.size())));
 
     my_old = my_val;
@@ -537,21 +450,23 @@ int main(int argc, char **argv) {
 
 
     // Calculate suffix sum
-    for (int i = 0; i < numprocs; ++i) {
+    for (int i = 0; i < logarithm; ++i) {
 
         for (int j = 0; j < numprocs; ++j) {
             MPI_Send(&my_val, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Broadcast my value
-            MPI_Send(&succ, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Broadcast my value
+            MPI_Send(&succ, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Broadcast my next
         }
 
+        // Receive broadcasted info
         for (int k = 0; k < numprocs; ++k) {
             int value = 0;
 
             int ssucc = 0;
 
-            MPI_Recv(&value, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);
-            MPI_Recv(&ssucc, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);
+            MPI_Recv(&value, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);    // Receive value
+            MPI_Recv(&ssucc, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);    // Receive successor
 
+            // Use only info got from my next
             if (stat.MPI_SOURCE == succ){
                 my_val = my_val + value;
                 succ = ssucc;
