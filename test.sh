@@ -15,9 +15,9 @@ echo $nodes >> tree
 
 
 ##preklad cpp zdrojaku
-/Users/sergeypanov/bin/mpi/bin/mpic++ -o pro pro.cpp
+mpic++ -o pro pro.cpp
 
 ##spusteni
-/Users/sergeypanov/bin/mpi/bin/mpirun -np $procs pro
+mpirun -np $procs pro
 ##uklid
 rm -f pro tree

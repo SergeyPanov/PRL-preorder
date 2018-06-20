@@ -2,7 +2,7 @@
 // Project: PRL-preorder-traversal //
 
 #include <iostream>
-#include "/Users/sergeypanov/bin/mpi/include/mpi.h"
+#include <mpi.h>
 #include <fstream>
 #include <vector>
 #include <map>
@@ -55,6 +55,9 @@ typedef struct Edge {
     char to_node;
     bool is_back;
 } Edge;
+
+
+
 
 
 // Construct single edge
@@ -290,6 +293,7 @@ Edge get_my_next(const map<char, vector<pair<Edge, Edge> > > &adj_list, vector<E
     return next_edge;
 }
 
+
 int get_id_for_pos(int pos, map<int, int> id_pos) {
 
     for (auto const &x : id_pos) {
@@ -408,7 +412,6 @@ int main(int argc, char **argv) {
         map_tour.insert(pair< int, int >(complete_etour[m].first.my_id, complete_etour[m].second.my_id));
     }
 
-
     ////////////////////////////////// Pre order algorithm //////////////////////////////////
 
 
@@ -452,16 +455,16 @@ int main(int argc, char **argv) {
             MPI_Send(&succ, 1, MPI_INT, j, TAG, MPI_COMM_WORLD); // Broadcast my next
         }
 
-        // Collect broadcasted value and next
+        // Receive broadcasted info
         for (int k = 0; k < numprocs; ++k) {
             int value = 0;
 
             int ssucc = 0;
 
-            MPI_Recv(&value, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);    // Get value of edge
-            MPI_Recv(&ssucc, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);    // Get next edge
+            MPI_Recv(&value, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);    // Receive value
+            MPI_Recv(&ssucc, 1, MPI_INT, k, TAG, MPI_COMM_WORLD, &stat);    // Receive successor
 
-            // Get only information from my succ
+            // Use only info got from my next
             if (stat.MPI_SOURCE == succ){
                 my_val = my_val + value;
                 succ = ssucc;
